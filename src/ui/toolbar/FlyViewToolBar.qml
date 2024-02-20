@@ -96,7 +96,7 @@ Rectangle {
 
         FlyViewToolBarIndicators { id: toolIndicators }
     }
-
+// test
     //-------------------------------------------------------------------------
     //-- Branding Logo
     Image {
