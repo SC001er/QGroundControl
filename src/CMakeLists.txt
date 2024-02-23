@@ -25,60 +25,6 @@ if (MOBILE)
 endif ()
 
 #######################################################
-#             Test Setup
-#######################################################
-if (BUILD_TESTING)
-
-add_custom_target(check
-        COMMAND ctest --output-on-failure .
-        USES_TERMINAL
-)
-
-function(add_qgc_test test_name)
-    add_test(
-            NAME ${test_name}
-            COMMAND $<TARGET_FILE:QGroundControl> --unittest:${test_name}
-    )
-    add_dependencies(check QGroundControl)
-endfunction()
-
-add_subdirectory(qgcunittest)
-
-add_qgc_test(ComponentInformationCacheTest)
-add_qgc_test(ComponentInformationTranslationTest)
-add_qgc_test(CameraCalcTest)
-add_qgc_test(CameraSectionTest)
-add_qgc_test(CorridorScanComplexItemTest)
-add_qgc_test(FactSystemTestGeneric)
-add_qgc_test(FactSystemTestPX4)
-#add_qgc_test(FileDialogTest)
-#add_qgc_test(FileManagerTest)
-add_qgc_test(FlightGearUnitTest)
-add_qgc_test(GeoTest)
-add_qgc_test(LinkManagerTest)
-add_qgc_test(LogDownloadTest)
-#add_qgc_test(MessageBoxTest)
-add_qgc_test(MissionCommandTreeTest)
-add_qgc_test(MissionControllerTest)
-add_qgc_test(MissionItemTest)
-add_qgc_test(MissionManagerTest)
-add_qgc_test(MissionSettingsTest)
-add_qgc_test(ParameterManagerTest)
-add_qgc_test(PlanMasterControllerTest)
-add_qgc_test(QGCMapPolygonTest)
-add_qgc_test(QGCMapPolylineTest)
-#add_qgc_test(RadioConfigTest)
-add_qgc_test(SendMavCommandTest)
-add_qgc_test(SimpleMissionItemTest)
-add_qgc_test(SpeedSectionTest)
-add_qgc_test(StructureScanComplexItemTest)
-add_qgc_test(SurveyComplexItemTest)
-add_qgc_test(TCPLinkTest)
-add_qgc_test(TransectStyleComplexItemTest)
-
-endif ()
-
-#######################################################
 #             Source Files
 #######################################################
 add_library(${PROJECT_NAME} STATIC
@@ -124,10 +70,11 @@ add_library(${PROJECT_NAME} STATIC
         ShapeFileHelper.h
         SHPFileHelper.cc
         SHPFileHelper.h
-        stable_headers.h
         TerrainTile.cc
         TerrainTile.h
 )
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE pch.h)
 
 set_source_files_properties(QGCApplication.cc PROPERTIES COMPILE_DEFINITIONS APP_VERSION_STR="${APP_VERSION_STR}")
 
@@ -162,6 +109,9 @@ add_subdirectory(Settings)
 if (${QGC_GST_TAISYNC_ENABLED})
     add_subdirectory(Taisync)
 endif ()
+if (NOT ${QGC_AIRLINK_DISABLED})
+    add_subdirectory(AirLink)
+endif()
 add_subdirectory(Terrain)
 add_subdirectory(uas)
 add_subdirectory(UTMSP)
@@ -225,9 +175,11 @@ if (GST_FOUND)
     endif ()
 endif ()
 
-if (BUILD_TESTING)
-    target_link_libraries(${PROJECT_NAME} PUBLIC qgcunittest)
-endif ()
+if (NOT ${QGC_AIRLINK_DISABLED})
+    target_link_libraries(${PROJECT_NAME} PUBLIC AirLink)
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC QGC_AIRLINK_DISABLED)
+endif()
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC
